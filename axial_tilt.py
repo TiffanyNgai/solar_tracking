@@ -5,7 +5,11 @@
 
 from sun import sunPosition
 import numpy as np
+import serial
+import serial.tools.list_ports
+import time
 from datetime import datetime, timedelta
+from mpu6050 import mpu6050
 
 def find_inc_ang(beta, panel_az, el, az):
     
@@ -47,8 +51,7 @@ def tilt_angle():
     month = opt_date.month
     day = opt_date.day
 
-    time = np.repeat(np.arange(0,24),60) + np.tile(np.arange(0,60),24)*1/60
-    pos = sunPosition(year,month,day,12+time_zone,0)
+    pos = sunPosition(year,month,day,12+time_zone,0, lat=latitude, long=longitude)
     beta_list = np.arange(0.0, 90.0, 0.5)
     opt_tilt_angle = 0
     current_inc_ang = 90
@@ -60,8 +63,52 @@ def tilt_angle():
 
     return opt_tilt_angle
 
+def accelerometer(opt_tilt_angle):
+    # Create an instance of the MPU6050 sensor with the I2C address
+    sensor = mpu6050(0x68)  # Replace 0x68 with the correct I2C address
+
+    start_time = time.time()
+    MAX_RUNTIME = 300
+
+    while(True):
+        # Read the accelerometer and gyroscope values
+        accel_data = sensor.get_accel_data()
+        gyro_data = sensor.get_gyro_data()
+
+        # Print the data
+        print("Accelerometer Data:")
+        print("X:", accel_data['x'])
+        print("Y:", accel_data['y'])
+        print("Z:", accel_data['z'])
+
+        print("\nGyroscope Data:")
+        print("X:", gyro_data['x'])
+        print("Y:", gyro_data['y'])
+        print("Z:", gyro_data['z'])
+
+        actual_tilt = 0 #TODO: get info, and calculate it 
+
+        difference = opt_tilt_angle - actual_tilt
+        MAX_ERROR = 0.5
+
+        if abs(difference) < MAX_ERROR:
+            print("You're at the right angle, hold on...")
+            time.sleep(1)
+            if abs(difference) < MAX_ERROR:
+                print("Congrats, the panel is at the right position.")
+                break
+        elif difference < 0:
+            print(f"Move DOWN the panel. Actual angle: {actual_tilt}, target angle: {opt_tilt_angle}")
+        elif difference > 0:
+            print(f"Move UP the panel. Actual angle: {actual_tilt}, target angle: {opt_tilt_angle}")
+
+        if (time.time() - start_time) > MAX_RUNTIME:
+            print("Program automatically shuts down because it's been running for too long.")
+            break
+
+    return
 
 
 if __name__ == "__main__":
-    tilt_angle()
-
+    opt_tilt_angle = tilt_angle()
+    accelerometer(opt_tilt_angle)
