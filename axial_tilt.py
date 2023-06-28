@@ -9,7 +9,6 @@ import serial
 import serial.tools.list_ports
 import time
 from datetime import datetime, timedelta
-from mpu6050 import mpu6050
 
 def find_inc_ang(beta, panel_az, el, az):
     
@@ -64,29 +63,30 @@ def tilt_angle():
     return opt_tilt_angle
 
 def accelerometer(opt_tilt_angle):
-    # Create an instance of the MPU6050 sensor with the I2C address
-    sensor = mpu6050(0x68)  # Replace 0x68 with the correct I2C address
+    print("Now we're going to adjust the tilt angle. Move the hinge back to the horizontal position.")
+
+    time.sleep(1)
+
+    ports = serial.tools.list_ports.comports()
+    for port in ports:
+        if 'usb' in port.device:
+            usb_port = port.device
+    
+    comm_rate = 9600
+    ser = serial.Serial(usb_port, comm_rate)
 
     start_time = time.time()
     MAX_RUNTIME = 300
 
+    getData=ser.readline()
+    horizontal_angle = float(getData.decode('utf-8')[:-2])
+
     while(True):
-        # Read the accelerometer and gyroscope values
-        accel_data = sensor.get_accel_data()
-        gyro_data = sensor.get_gyro_data()
+        
+        getData=ser.readline()
+        actual_tilt = horizontal_angle - float(getData.decode('utf-8')[:-2])
 
-        # Print the data
-        print("Accelerometer Data:")
-        print("X:", accel_data['x'])
-        print("Y:", accel_data['y'])
-        print("Z:", accel_data['z'])
-
-        print("\nGyroscope Data:")
-        print("X:", gyro_data['x'])
-        print("Y:", gyro_data['y'])
-        print("Z:", gyro_data['z'])
-
-        actual_tilt = 0 #TODO: get info, and calculate it 
+        print(actual_tilt)
 
         difference = opt_tilt_angle - actual_tilt
         MAX_ERROR = 0.5
