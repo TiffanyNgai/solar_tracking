@@ -110,5 +110,6 @@ def accelerometer(opt_tilt_angle):
 
 
 if __name__ == "__main__":
-    opt_tilt_angle = tilt_angle()
+    # opt_tilt_angle = tilt_angle()
+    opt_tilt_angle = 20
     accelerometer(opt_tilt_angle)
