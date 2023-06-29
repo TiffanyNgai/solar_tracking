@@ -10,6 +10,10 @@ import serial.tools.list_ports
 import time
 from datetime import datetime, timedelta
 
+time_zone = 4
+latitude = 43.5
+longtitude = -80.5
+
 def find_inc_ang(beta, panel_az, el, az):
     
     beta = np.radians(beta)
@@ -62,13 +66,29 @@ def tilt_angle():
 
     return opt_tilt_angle
 
+def save_info(ser):
+    start_time = str(datetime.now().strftime("%m-%d-%Y-%H-%M-%S"))
+    ser.write(start_time.encode('utf-8'))
+    ser.write(b'\n')
+    ser.write(str(time_zone).encode('utf-8'))
+    ser.write(b'\n')
+    ser.write(str(latitude).encode('utf-8'))
+    ser.write(b'\n')
+    ser.write(str(longtitude).encode('utf-8'))
+    ser.write(b'\n')
+    while(1):
+        getData=ser.readline()
+        data = getData.decode('utf-8')[:-2]
+        print(data)
+
+
 def accelerometer(opt_tilt_angle):
     print("Now we're going to adjust the tilt angle. Move the hinge back to the horizontal position.")
 
     time.sleep(1)
 
     ports = serial.tools.list_ports.comports()
-    for port in ports:
+    for i, port in enumerate(ports):
         if 'usb' in port.device:
             usb_port = port.device
     
@@ -76,7 +96,7 @@ def accelerometer(opt_tilt_angle):
     ser = serial.Serial(usb_port, comm_rate)
 
     start_time = time.time()
-    MAX_RUNTIME = 300
+    MAX_RUNTIME = 3
 
     getData=ser.readline()
     horizontal_angle = float(getData.decode('utf-8')[:-2])
@@ -84,18 +104,22 @@ def accelerometer(opt_tilt_angle):
     while(True):
         
         getData=ser.readline()
-        actual_tilt = horizontal_angle - float(getData.decode('utf-8')[:-2])
-
-        print(actual_tilt)
+        actual_tilt = (float(getData.decode('utf-8')[:-2]) - horizontal_angle + 180) % 360 - 180
 
         difference = opt_tilt_angle - actual_tilt
         MAX_ERROR = 0.5
 
         if abs(difference) < MAX_ERROR:
             print("You're at the right angle, hold on...")
-            time.sleep(1)
+            time.sleep(2)
+             
+            getData=ser.readline()
+            actual_tilt = (float(getData.decode('utf-8')[:-2]) - horizontal_angle + 180) % 360 - 180
+
+            difference = opt_tilt_angle - actual_tilt
             if abs(difference) < MAX_ERROR:
-                print("Congrats, the panel is at the right position.")
+                print(f"Congrats, the panel is at the right position {actual_tilt}.")
+                save_info(ser)
                 break
         elif difference < 0:
             print(f"Move DOWN the panel. Actual angle: {actual_tilt}, target angle: {opt_tilt_angle}")
@@ -104,9 +128,9 @@ def accelerometer(opt_tilt_angle):
 
         if (time.time() - start_time) > MAX_RUNTIME:
             print("Program automatically shuts down because it's been running for too long.")
+            save_info(ser)
             break
 
-    return
 
 
 if __name__ == "__main__":
