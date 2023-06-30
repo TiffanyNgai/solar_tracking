@@ -5,8 +5,16 @@
 
 from sun import sunPosition
 import numpy as np
+import serial
+import serial.tools.list_ports
+import time
+from datetime import datetime, timedelta
 
-def inc_ang(beta, panel_az, el, az):
+time_zone = 4
+latitude = 43.5
+longtitude = -80.5
+
+def find_inc_ang(beta, panel_az, el, az):
     
     beta = np.radians(beta)
     panel_az = np.radians(panel_az)
@@ -18,7 +26,7 @@ def inc_ang(beta, panel_az, el, az):
     deg = np.degrees(np.arccos(arg))
     
     # max value is 90, means output is zero 
-    deg[deg>90] = 90
+    if deg > 90: deg = 90
     
     return deg
 
@@ -26,7 +34,8 @@ def tilt_angle():
     time_zone = int(input("Enter your timezone (4 for GMT -4): "))
     latitude = float(input("Enter the latitude of the location: "))
     longitude = float(input("Enter the longitude of the location: "))
-    start_date = input("Enter the start date which the device is going to be attached to the sign (mm/dd/yyyy): ")
+    start_date = input("Enter the start date which the device is being attached to the sign (mm/dd/yyyy): ")
+    duration = int(input("Enter the estimated number of day(s) the device is staying on the sign: "))
 
     if len(start_date.split("/")) != 3:
         print("Error: Invalid start date")
@@ -34,36 +43,97 @@ def tilt_angle():
     
     [start_month, start_day, start_year] = start_date.split("/")
     start_month = int(start_month)
-    start_day = int(start_day)
+    start_day = int (start_day)
     start_year = int(start_year)
+    start_date = datetime(start_year, start_month, start_day)
+
+    # Use the optimal tile angle calculated on start_date + duration/2 
+    opt_date = start_date + timedelta(days=int(duration/2))
+
+    year = opt_date.year
+    month = opt_date.month
+    day = opt_date.day
+
+    pos = sunPosition(year,month,day,12+time_zone,0, lat=latitude, long=longitude)
+    beta_list = np.arange(0.0, 90.0, 0.5)
+    opt_tilt_angle = 0
+    current_inc_ang = 90
+    for beta in beta_list:
+        inc_ang = find_inc_ang(beta, 180, pos[1], pos[0])
+        if inc_ang < current_inc_ang:
+            opt_tilt_angle = beta
+            current_inc_ang = inc_ang
+
+    return opt_tilt_angle
+
+def save_info(ser):
+    start_time = str(datetime.now().strftime("%m-%d-%Y-%H-%M-%S"))
+    ser.write(start_time.encode('utf-8'))
+    ser.write(b'\n')
+    ser.write(str(time_zone).encode('utf-8'))
+    ser.write(b'\n')
+    ser.write(str(latitude).encode('utf-8'))
+    ser.write(b'\n')
+    ser.write(str(longtitude).encode('utf-8'))
+    ser.write(b'\n')
+    while(1):
+        getData=ser.readline()
+        data = getData.decode('utf-8')[:-2]
+        print(data)
+
+
+def accelerometer(opt_tilt_angle):
+    print("Now we're going to adjust the tilt angle. Move the hinge back to the horizontal position.")
+
+    time.sleep(1)
+
+    ports = serial.tools.list_ports.comports()
+    for i, port in enumerate(ports):
+        if 'usb' in port.device:
+            usb_port = port.device
     
-    print(latitude)
-    print(type(latitude))
+    comm_rate = 9600
+    ser = serial.Serial(usb_port, comm_rate)
 
+    start_time = time.time()
+    MAX_RUNTIME = 3
 
+    getData=ser.readline()
+    horizontal_angle = float(getData.decode('utf-8')[:-2])
 
+    while(True):
+        
+        getData=ser.readline()
+        actual_tilt = (float(getData.decode('utf-8')[:-2]) - horizontal_angle + 180) % 360 - 180
 
-    # # Jun 1st
-    # time = np.repeat(np.arange(0,24),60) + np.tile(np.arange(0,60),24)*1/60
-    # beta0601_opt = 43.5 - 23.5
-    # pos0601 = np.array([sunPosition(2023,6,1,hr,mn) for hr,mn in zip(np.repeat(hrs,60),np.tile(mins,24))])
-    # beta0601_list = np.linspace(0, 40,5)
-    # for beta in beta0601_list:
-    #     inc_ang0601 = inc_ang(beta, 180, pos0601[:,1], pos0601[:,0])
-    #     plt.plot(time, inc_ang0601, '.',markersize=2,label=beta)
-    # plt.xlabel('Time (hr)')
-    # plt.ylabel('Incidence angle (degree)')
-    # plt.title(f'Incidence angle at Jun 1st, optimal tilt angle: {beta0601_opt}')
-    # plt.legend(title='Tilt angle (degree)')
-    # plt.grid()
-    # plt.show()
+        difference = opt_tilt_angle - actual_tilt
+        MAX_ERROR = 0.5
 
+        if abs(difference) < MAX_ERROR:
+            print("You're at the right angle, hold on...")
+            time.sleep(2)
+             
+            getData=ser.readline()
+            actual_tilt = (float(getData.decode('utf-8')[:-2]) - horizontal_angle + 180) % 360 - 180
 
+            difference = opt_tilt_angle - actual_tilt
+            if abs(difference) < MAX_ERROR:
+                print(f"Congrats, the panel is at the right position {actual_tilt}.")
+                save_info(ser)
+                break
+        elif difference < 0:
+            print(f"Move DOWN the panel. Actual angle: {actual_tilt}, target angle: {opt_tilt_angle}")
+        elif difference > 0:
+            print(f"Move UP the panel. Actual angle: {actual_tilt}, target angle: {opt_tilt_angle}")
 
-    return
+        if (time.time() - start_time) > MAX_RUNTIME:
+            print("Program automatically shuts down because it's been running for too long.")
+            save_info(ser)
+            break
 
 
 
 if __name__ == "__main__":
-    tilt_angle()
-
+    # opt_tilt_angle = tilt_angle()
+    opt_tilt_angle = 20
+    accelerometer(opt_tilt_angle)
