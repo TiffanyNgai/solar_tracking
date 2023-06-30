@@ -10,7 +10,7 @@ int maxVal = 402;
 double y;
 int day, month, year, hour, minute, second;
 int time_zone;
-double latitude, longtitude;
+double latitude, longtitude, tilt_angle;
 
 bool send_angle = 1;
  
@@ -45,6 +45,7 @@ void setup(){
       time_zone = atoi(Serial.readStringUntil('\n').c_str());
       latitude = atof(Serial.readStringUntil('\n').c_str());
       longtitude = atof(Serial.readStringUntil('\n').c_str());
+      tilt_angle = atof(Serial.readStringUntil('\n').c_str());
       Serial.print("Current time: ");
       Serial.println(start_time);
 
@@ -76,6 +77,8 @@ void setup(){
       Serial.println(latitude);
       Serial.print("Longtitude: ");
       Serial.println(longtitude);
+      Serial.print("Tilt angle: ");
+      Serial.println(tilt_angle);
     }
   }
 }
