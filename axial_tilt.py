@@ -13,6 +13,7 @@ from datetime import datetime, timedelta
 time_zone = 4
 latitude = 43.5
 longtitude = -80.5
+opt_tilt_angle = 0
 
 def find_inc_ang(beta, panel_az, el, az):
     
@@ -56,7 +57,6 @@ def tilt_angle():
 
     pos = sunPosition(year,month,day,12+time_zone,0, lat=latitude, long=longitude)
     beta_list = np.arange(0.0, 90.0, 0.5)
-    opt_tilt_angle = 0
     current_inc_ang = 90
     for beta in beta_list:
         inc_ang = find_inc_ang(beta, 180, pos[1], pos[0])
@@ -64,7 +64,6 @@ def tilt_angle():
             opt_tilt_angle = beta
             current_inc_ang = inc_ang
 
-    return opt_tilt_angle
 
 def save_info(ser):
     start_time = str(datetime.now().strftime("%m-%d-%Y-%H-%M-%S"))
@@ -76,13 +75,16 @@ def save_info(ser):
     ser.write(b'\n')
     ser.write(str(longtitude).encode('utf-8'))
     ser.write(b'\n')
+    ser.write(str(opt_tilt_angle).encode('utf-8'))
+    ser.write(b'\n')
+
     while(1):
         getData=ser.readline()
         data = getData.decode('utf-8')[:-2]
         print(data)
 
 
-def accelerometer(opt_tilt_angle):
+def accelerometer():
     print("Now we're going to adjust the tilt angle. Move the hinge back to the horizontal position.")
 
     time.sleep(1)
@@ -136,4 +138,4 @@ def accelerometer(opt_tilt_angle):
 if __name__ == "__main__":
     # opt_tilt_angle = tilt_angle()
     opt_tilt_angle = 20
-    accelerometer(opt_tilt_angle)
+    accelerometer()
