@@ -9,15 +9,8 @@ double y;
 int start_day, start_month, start_year, start_hour, start_minute, start_second;
 int time_zone;
 double latitude, longtitude, tilt_angle;
-const int cal_intervals[] = {0,0,0,0,0,0,0,,40};
-// 10pm to 6am: no movement
-// 6am to 12pm: move every 60 mins
-// 12pm to 3pm: move every 20 mins
-// 3pm to 6pm: move every 30 mins
-// 6pm to 10pm: move every 60 mins
 
-// 10pm to 6am: LED on, discharging
-// 6am to 10pm: LED off, charging
+const int LED_pin = 13; //TODO: tbd
 
 bool send_angle = 1;
  
@@ -88,13 +81,23 @@ void setup(){
   }
 }
 
-void loop(){
-  time_t currentTime = now();
 
-  int currentHour = hour(currentTime);
+// 10pm to 6am: no movement
+// 6am to 12pm: move every 60 mins
+// 12pm to 3pm: move every 20 mins
+// 3pm to 6pm: move every 30 mins
+// 6pm to 10pm: move every 60 mins
+
+// 10pm to 6am: LED on, discharging
+// 6am to 10pm: LED off, charging
+
+void loop(){
+  time_t current_time = now();
+
+  int current_hour = hour(current_time);
   
-  int currentMinute = minute(currentTime);
-  int currentSecond = second(currentTime);
+  int current_minute = minute(current_time);
+  int current_second = second(current_time);
   
   Serial.println("");
   Serial.print(currentHour);
@@ -102,6 +105,36 @@ void loop(){
   Serial.print(currentMinute);
   Serial.print(":");
   Serial.print(currentSecond);
+
+  if (current_hour >= 6 && current_hour < 12) {
+    if (current_minute == 0) {
+      // calls the rotation angle and move the motor
+    }
+  }
+  else if (current_hour >= 12 && current_hour < 15) {
+    if (current_minute == 0 || current_minute == 20 || current_minute == 40) {
+      // calls the rotation angle and move the motor
+    }
+  }
+  else if (current_hour >= 15 && current_hour < 18) {
+    if (current_minute == 0 || current_minute == 30) {
+      // calls the rotation angle and move the motor
+    }
+  }
+  else if (current_hour >= 18 && current_hour < 22) {
+    if (current_minute == 0) {
+      // calls the rotation angle and move the motor
+    }
+  }
+
+  if (current_hour >= 22 || current_hour < 6) {
+    digitalWrite(LED_pin, HIGH);
+  }
+  else{
+    digitalWrite(LED_pin, LOW);
+  }
+
+  //TODO: current and voltage regulator
 
   delay(1000);
 }
