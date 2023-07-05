@@ -1,37 +1,49 @@
 #include<Wire.h>
 #include <TimeLib.h>
-#include <AccelStepper.h> 
+#include <AccelStepper.h>
+#include <EEPROM.h>
 
-const int MPU_addr=0x68;
-int16_t AcX,AcY,AcZ;
-int minVal = 265;
-int maxVal = 402;
-double y;
+// Data from python file
 int start_day, start_month, start_year, start_hour, start_minute, start_second;
 int time_zone;
 double latitude, longtitude, tilt_angle;
-const int motor_step_ratio = 2038;
 
+// Motor
+const int motor_step_ratio = 2038;
 AccelStepper stepper(AccelStepper::FULL4WIRE, 19, 18, 15, 17);
+const int angle_address = 0;
+double current_angle = 0.0;
+const double moving_interval = 10;
+double rotation_angle = 0.0;
+double motor_step = 0.0;
+
+// LED
 const int LED_pin = 13; //TODO: tbd
 
-bool send_angle = 1;
  
 void setup(){
+  Serial.begin(115200);
+  
+  // Accelerometer
+  const int MPU_addr=0x68;
+  int16_t AcX,AcY,AcZ;
+  int minVal = 265;
+  int maxVal = 402;
+  double y;
+  bool send_angle = 1;
   Wire.begin();
   Wire.beginTransmission(MPU_addr);
   Wire.write(0x6B);
   Wire.write(0);
   Wire.endTransmission(true);
-  Serial.begin(115200);
-  
+
+  // Motor
+  EEPROM.begin();
+  EEPROM.get(angle_address, current_angle);
+  double current_motor_pos = current_angle * motor_step_ratio;
   stepper.setMaxSpeed(1000);
   stepper.setAcceleration(500);
-
-  
-  double rotational_angle = 180.5;
-  double motor_step = rotational_angle * motor_step_ratio;
-  stepper.moveTo(motor_step);
+  stepper.setCurrentPosition(current_motor_pos);
   
   while(send_angle){
     Wire.beginTransmission(MPU_addr);
@@ -92,16 +104,6 @@ void setup(){
   }
 }
 
-
-// 10pm to 6am: no movement
-// 6am to 12pm: move every 60 mins
-// 12pm to 3pm: move every 20 mins
-// 3pm to 6pm: move every 30 mins
-// 6pm to 10pm: move every 60 mins
-
-// 10pm to 6am: LED on, discharging
-// 6am to 10pm: LED off, charging
-
 void loop(){
   time_t current_time = now();
 
@@ -109,51 +111,42 @@ void loop(){
   int current_minute = minute(current_time);
   int current_second = second(current_time);
   
-//  Serial.println("");
-//  Serial.print(current_hour);
-//  Serial.print(":");
-//  Serial.print(current_minute);
-//  Serial.print(":");
-//  Serial.print(current_second);
+  Serial.println("");
+  Serial.print(current_hour);
+  Serial.print(":");
+  Serial.print(current_minute);
+  Serial.print(":");
+  Serial.print(current_second);
 
-  double rotational_angle = 180.5;
+  rotational_angle = 180.5;
   double motor_step = rotational_angle * motor_step_ratio;
-  
 
-  stepper.run();
+  current_angle = rotational_angle;
+  EEPROM.put(angle_address, current_angle);
+  EEPROM.end();
   
   if (stepper.distanceToGo() == 0) {
-    stepper.moveTo(0);
+    stepper.stop();
+  }
+  else {
+    stepper.run();
+    current_angle = stepper.currentPosition() / motor_step_ratio;
+    EEPROM.put(angle_address, current_angle);
+    EEPROM.end();
   }
 
-  // 6am to 12pm
-  if (current_hour >= 6 && current_hour < 12) {
-    if (current_minute == 0) {
-      // calls the rotation angle and move the motor
+  // 6am to 8pm
+  if (current_hour >= 6 && current_hour < 20) { //TODO: might need to take into account the time zone
+    if (current_minute % moving_interval == 0) { //TODO: might need other method if the interval cannot be 60 divided by the interval is not an integer
+      // get the rotation angle and move the motor
+      motor_step = rotation_angle * motor_step_ratio;
+      stepper.moveTo(motor_step);
       
     }
   }
-  // 12pm to 3pm
-  else if (current_hour >= 12 && current_hour < 15) {
-    if (current_minute == 0 || current_minute == 20 || current_minute == 40) {
-      // calls the rotation angle and move the motor
-    }
-  }
-  // 3pm to 6pm
-  else if (current_hour >= 15 && current_hour < 18) {
-    if (current_minute == 0 || current_minute == 30) {
-      // calls the rotation angle and move the motor
-    }
-  }
-  // 6pm to 10pm
-  else if (current_hour >= 18 && current_hour < 22) {
-    if (current_minute == 0) {
-      // calls the rotation angle and move the motor
-    }
-  }
 
-  // 10pm to 6am
-  if (current_hour >= 22 || current_hour < 6) {
+  // 8pm to 6am
+  if (current_hour >= 20 || current_hour < 6) {
     digitalWrite(LED_pin, HIGH);
   }
   else{
@@ -161,6 +154,4 @@ void loop(){
   }
 
   //TODO: current and voltage regulator
-
-//  delay(1000);
 }
