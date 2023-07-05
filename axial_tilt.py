@@ -94,44 +94,46 @@ def accelerometer():
         if 'usb' in port.device:
             usb_port = port.device
     
-    comm_rate = 9600
-    ser = serial.Serial(usb_port, comm_rate)
+    comm_rate = 115200
+    ser = serial.Serial('COM3', comm_rate)
 
     start_time = time.time()
     MAX_RUNTIME = 3
 
-    getData=ser.readline()
-    horizontal_angle = float(getData.decode('utf-8')[:-2])
+    # getData=ser.readline()
+    # horizontal_angle = float(getData.decode('utf-8')[:-2])
 
     while(True):
+        save_info(ser)
+        return
         
-        getData=ser.readline()
-        actual_tilt = (float(getData.decode('utf-8')[:-2]) - horizontal_angle + 180) % 360 - 180
+        # getData=ser.readline()
+        # actual_tilt = (float(getData.decode('utf-8')[:-2]) - horizontal_angle + 180) % 360 - 180
 
-        difference = opt_tilt_angle - actual_tilt
-        MAX_ERROR = 0.5
+        # difference = opt_tilt_angle - actual_tilt
+        # MAX_ERROR = 0.5
 
-        if abs(difference) < MAX_ERROR:
-            print("You're at the right angle, hold on...")
-            time.sleep(2)
+        # if abs(difference) < MAX_ERROR:
+        #     print("You're at the right angle, hold on...")
+        #     time.sleep(2)
              
-            getData=ser.readline()
-            actual_tilt = (float(getData.decode('utf-8')[:-2]) - horizontal_angle + 180) % 360 - 180
+        #     getData=ser.readline()
+        #     actual_tilt = (float(getData.decode('utf-8')[:-2]) - horizontal_angle + 180) % 360 - 180
 
-            difference = opt_tilt_angle - actual_tilt
-            if abs(difference) < MAX_ERROR:
-                print(f"Congrats, the panel is at the right position {actual_tilt}.")
-                save_info(ser)
-                break
-        elif difference < 0:
-            print(f"Move DOWN the panel. Actual angle: {actual_tilt}, target angle: {opt_tilt_angle}")
-        elif difference > 0:
-            print(f"Move UP the panel. Actual angle: {actual_tilt}, target angle: {opt_tilt_angle}")
+        #     difference = opt_tilt_angle - actual_tilt
+        #     if abs(difference) < MAX_ERROR:
+        #         print(f"Congrats, the panel is at the right position {actual_tilt}.")
+        #         save_info(ser)
+        #         break
+        # elif difference < 0:
+        #     print(f"Move DOWN the panel. Actual angle: {actual_tilt}, target angle: {opt_tilt_angle}")
+        # elif difference > 0:
+        #     print(f"Move UP the panel. Actual angle: {actual_tilt}, target angle: {opt_tilt_angle}")
 
-        if (time.time() - start_time) > MAX_RUNTIME:
-            print("Program automatically shuts down because it's been running for too long.")
-            save_info(ser)
-            break
+        # if (time.time() - start_time) > MAX_RUNTIME:
+        #     print("Program automatically shuts down because it's been running for too long.")
+        #     save_info(ser)
+        #     break
 
 
 
