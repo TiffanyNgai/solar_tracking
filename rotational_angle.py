@@ -32,6 +32,7 @@ def line_best_fit(R):
     # Print the equation of the fitted line
     print("Equation of the fitted line:")
     print("y =", fitted_m, "x +", fitted_b)
+    return fitted_m, fitted_b
 
 
 
@@ -58,24 +59,22 @@ def R_opt(beta_ax, az_ax, el, az,limit=90):
     
     return R
 
-def rotational_angle():
-    # info from axial tilt file
-    time_zone = 4
-
+def optimal_rotational_angle(optimal_date, beta_ax, time_zone=4, latitude=43.5, longitude=-80.5):
     # optimal date 
-    year = 2023
-    month = 7
-    day = 6
+    year = optimal_date.year
+    month = optimal_date.month
+    day = optimal_date.day
 
     # other inputs
-    beta_ax = 20 
     az_ax = 180 
     
     hrs = np.arange(0+time_zone,24+time_zone)
     mins = np.arange(0,60)
 
-    pos_every_min = np.array([sunPosition(year,month,day,hr,mn) 
+    pos_every_min = np.array([sunPosition(year,month,day,hr,mn,lat=latitude,long=longitude) 
         for hr,mn in zip(np.repeat(hrs,60),np.tile(mins,24))])
+
+    daylight_start_min = next((i for i, value in enumerate(pos_every_min[:,1]) if value > 0), None)
 
     # get elevation
     el = pos_every_min[:,1][pos_every_min[:,1]>0]
@@ -84,7 +83,16 @@ def rotational_angle():
 
     R = R_opt(beta_ax,az_ax,el,az)
 
-    line_best_fit(R)
+    print(el.shape)
+    print(R.shape)
 
-# Run the rotational_angle function
-rotational_angle()
+    fitted_m, fitted_b = line_best_fit(R)
+
+    # print(f"Opt date: {optimal_date}")
+    # print(f"beta_ax: {beta_ax}")
+    # print(f"Slope: {fitted_m}")
+    # print(f"Intercept: {fitted_b}")
+
+    return daylight_start_min, fitted_m, fitted_b
+
+

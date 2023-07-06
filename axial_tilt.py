@@ -4,16 +4,12 @@
 #    tilt angle accordingly
 
 from sun import sunPosition
+from rotational_angle import optimal_rotational_angle
 import numpy as np
 import serial
 import serial.tools.list_ports
 import time
-from datetime import datetime, timedelta
-
-time_zone = 4
-latitude = 43.5
-longtitude = -80.5
-opt_tilt_angle = 0
+from datetime import datetime, timedelta, date
 
 def find_inc_ang(beta, panel_az, el, az):
     
@@ -64,8 +60,15 @@ def tilt_angle():
             opt_tilt_angle = beta
             current_inc_ang = inc_ang
 
+    return time_zone, latitude, longitude, opt_date, opt_tilt_angle
+
 
 def save_info(ser):
+    daylight_start_min, fitted_m, fitted_b = optimal_rotational_angle(opt_date, opt_tilt_angle, time_zone, latitude, longitude)
+
+    fitted_m = round(fitted_m, 3)
+    fitted_b = round(fitted_b, 3)
+
     start_time = str(datetime.now().strftime("%m-%d-%Y-%H-%M-%S"))
     ser.write(start_time.encode('utf-8'))
     ser.write(b'\n')
@@ -73,9 +76,15 @@ def save_info(ser):
     ser.write(b'\n')
     ser.write(str(latitude).encode('utf-8'))
     ser.write(b'\n')
-    ser.write(str(longtitude).encode('utf-8'))
+    ser.write(str(longitude).encode('utf-8'))
     ser.write(b'\n')
     ser.write(str(opt_tilt_angle).encode('utf-8'))
+    ser.write(b'\n')
+    ser.write(str(daylight_start_min).encode('utf-8'))
+    ser.write(b'\n')
+    ser.write(str(fitted_m).encode('utf-8'))
+    ser.write(b'\n')
+    ser.write(str(fitted_b).encode('utf-8'))
     ser.write(b'\n')
 
     while(1):
@@ -84,7 +93,7 @@ def save_info(ser):
         print(data)
 
 
-def accelerometer():
+def accelerometer(time_zone, latitude, longitude, opt_date, opt_tilt_angle):
     print("Now we're going to adjust the tilt angle. Move the hinge back to the horizontal position.")
 
     time.sleep(1)
@@ -99,12 +108,6 @@ def accelerometer():
 
     start_time = time.time()
     MAX_RUNTIME = 3
-
-    # testing
-    getData=ser.readline()
-    print(getData)
-    getData=ser.readline()
-    print(getData)
 
     getData=ser.readline()
     horizontal_angle = float(getData.decode('utf-8')[:-2])
@@ -141,6 +144,5 @@ def accelerometer():
 
 
 if __name__ == "__main__":
-    # opt_tilt_angle = tilt_angle()
-    opt_tilt_angle = 20
-    accelerometer()
+    time_zone, latitude, longitude, opt_date, opt_tilt_angle = tilt_angle()
+    accelerometer(time_zone, latitude, longitude, opt_date, opt_tilt_angle)

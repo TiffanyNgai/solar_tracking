@@ -10,12 +10,15 @@ double latitude, longtitude, tilt_angle;
 
 // Motor
 const int motor_step_ratio = 2038;
-AccelStepper stepper(AccelStepper::FULL4WIRE, 19, 18, 15, 17);
+//AccelStepper stepper(AccelStepper::FULL4WIRE, 19, 18, 15, 17);
 const int angle_address = 0;
 double current_angle = 0.0;
-const double moving_interval = 10;
+const unsigned long moving_interval_sec = 25 * 60;
+unsigned long current_t_sec, previous_t_sec;
 double rotation_angle = 0.0;
 double motor_step = 0.0;
+double fitted_m, fitted_b;
+int daylight_start_min;
 
 // LED
 const int LED_pin = 13; //TODO: tbd
@@ -41,9 +44,9 @@ void setup(){
   EEPROM.begin();
   EEPROM.get(angle_address, current_angle);
   double current_motor_pos = current_angle * motor_step_ratio;
-  stepper.setMaxSpeed(1000);
-  stepper.setAcceleration(500);
-  stepper.setCurrentPosition(current_motor_pos);
+//  stepper.setMaxSpeed(1000);
+//  stepper.setAcceleration(500);
+//  stepper.setCurrentPosition(current_motor_pos);
   
   while(send_angle){
     Wire.beginTransmission(MPU_addr);
@@ -67,6 +70,9 @@ void setup(){
       latitude = atof(Serial.readStringUntil('\n').c_str());
       longtitude = atof(Serial.readStringUntil('\n').c_str());
       tilt_angle = atof(Serial.readStringUntil('\n').c_str());
+      daylight_start_min = atoi(Serial.readStringUntil('\n').c_str());
+      fitted_m = atof(Serial.readStringUntil('\n').c_str());
+      fitted_b = strtod(Serial.readStringUntil('\n').c_str(), NULL);
       Serial.print("Current time: ");
       Serial.println(start_time);
 
@@ -100,8 +106,23 @@ void setup(){
       Serial.println(longtitude);
       Serial.print("Tilt angle: ");
       Serial.println(tilt_angle);
+      Serial.print("Daylight start min: ");
+      Serial.println(daylight_start_min);
+      Serial.print("Fitted m: ");
+      Serial.println(fitted_m);
+      Serial.print("Fitted b: ");
+      Serial.println(fitted_b);
     }  
   }
+
+  
+  time_t current_time = now();
+
+  int current_hour = hour(current_time);
+  int current_minute = minute(current_time);
+  int current_second = second(current_time);
+
+  previous_t_sec = current_hour * 3600 + current_minute * 60 + current_second;
 }
 
 void loop(){
@@ -111,38 +132,55 @@ void loop(){
   int current_minute = minute(current_time);
   int current_second = second(current_time);
   
+  current_t_sec = current_hour * 3600 + current_minute * 60 + current_second;
+
+  rotation_angle = 180.5;
+  double motor_step = rotation_angle * motor_step_ratio;
+
+  current_angle = rotation_angle;
+  EEPROM.put(angle_address, current_angle);
+  EEPROM.end();
+  
+//  if (stepper.distanceToGo() == 0) {
+//    stepper.stop();
+//  }
+//  else {
+//    stepper.run();
+//    current_angle = stepper.currentPosition() / motor_step_ratio;
+//    EEPROM.put(angle_address, current_angle);
+//    EEPROM.end();
+//  }
+
   Serial.println("");
+  Serial.print("Current time: ");
   Serial.print(current_hour);
   Serial.print(":");
   Serial.print(current_minute);
   Serial.print(":");
   Serial.print(current_second);
-
-  rotational_angle = 180.5;
-  double motor_step = rotational_angle * motor_step_ratio;
-
-  current_angle = rotational_angle;
-  EEPROM.put(angle_address, current_angle);
-  EEPROM.end();
+  double x = current_hour * 60 + current_minute - daylight_start_min;
+  rotation_angle = fitted_m * x + fitted_b;
+  Serial.println("");
+  Serial.print("Input minute: ");
+  Serial.print(x);
+  Serial.println("");
+  Serial.print("Rotational angle: ");
+  Serial.print(rotation_angle);
   
-  if (stepper.distanceToGo() == 0) {
-    stepper.stop();
-  }
-  else {
-    stepper.run();
-    current_angle = stepper.currentPosition() / motor_step_ratio;
-    EEPROM.put(angle_address, current_angle);
-    EEPROM.end();
-  }
 
   // 6am to 8pm
-  if (current_hour >= 6 && current_hour < 20) { //TODO: might need to take into account the time zone
-    if (current_minute % moving_interval == 0) { //TODO: might need other method if the interval cannot be 60 divided by the interval is not an integer
-      // get the rotation angle and move the motor
-      motor_step = rotation_angle * motor_step_ratio;
-      stepper.moveTo(motor_step);
-      
+  if ((current_hour >= 6 && current_hour < 20) && (current_t_sec - previous_t_sec >= moving_interval_sec)) {
+    double x = hour() * 60 + minute() - daylight_start_min;
+    rotation_angle = fitted_m * x + fitted_b;
+    if (rotation_angle > 90){ 
+      rotation_angle = 90;
     }
+    else if (rotation_angle < -90) {
+      rotation_angle = -90;
+    }
+//    motor_step = rotation_angle * motor_step_ratio;
+//    stepper.moveTo(motor_step);
+    previous_t_sec = current_t_sec;
   }
 
   // 8pm to 6am
@@ -153,5 +191,6 @@ void loop(){
     digitalWrite(LED_pin, LOW);
   }
 
+  delay(5000);
   //TODO: current and voltage regulator
 }
