@@ -1,6 +1,39 @@
 from sun import sunPosition
 import numpy as np
 from datetime import datetime, timedelta
+from scipy.optimize import curve_fit
+import matplotlib.pyplot as plt
+
+def line_best_fit(R):
+    # Define the function you want to fit (linear function: y = mx + b)
+    def linear_function(x, m, b):
+        return m * x + b
+
+    # Create the x values corresponding to the R array indices
+    x = np.arange(len(R))
+
+    # Perform curve fitting
+    fit_params, _ = curve_fit(linear_function, x, R)
+
+    # Extract the fitted parameters
+    fitted_m, fitted_b = fit_params
+
+    # Generate the curve using the fitted parameters
+    fitted_curve = linear_function(x, fitted_m, fitted_b)
+
+    # Plot the original data and the fitted curve
+    plt.plot(x, R, 'ro', label='Original Data')
+    plt.plot(x, fitted_curve, 'b-', label='Fitted Curve')
+    plt.xlabel('Index')
+    plt.ylabel('R Values')
+    plt.legend()
+    plt.show()
+
+    # Print the equation of the fitted line
+    print("Equation of the fitted line:")
+    print("y =", fitted_m, "x +", fitted_b)
+
+
 
 def R_opt(beta_ax, az_ax, el, az,limit=90):
     beta_ax = np.radians(beta_ax)
@@ -25,32 +58,33 @@ def R_opt(beta_ax, az_ax, el, az,limit=90):
     
     return R
 
-def get_current_time():
-    now = datetime.datetime.now()
-    return now.year, now.month, now.day, now.hour, now.minute
-
 def rotational_angle():
-    # set by what the user inputted from axial tilt
-    # TODO: we need to somehow get this info from that file
+    # info from axial tilt file
     time_zone = 4
-    latitude = 43.4643
-    longitude = 80.5204
 
-    # inputs
-    beta_ax = 20 # TODO: get from axial tilt file
-    az_ax = 180 # axis azimuth 
+    # optimal date 
+    year = 2023
+    month = 7
+    day = 6
 
-   # Get current time and add 10 minutes
-    year, month, day, hour, minute = get_current_time()
-    hour += time_zone
-    future_time = datetime.datetime(year, month, day, hour, minute) + datetime.timedelta(minutes=10)
-    future_year, future_month, future_day, future_hour, future_minute = future_time.year, future_time.month, future_time.day, future_time.hour, future_time.minute
+    # other inputs
+    beta_ax = 20 
+    az_ax = 180 
+    
+    hrs = np.arange(0+time_zone,24+time_zone)
+    mins = np.arange(0,60)
 
-    pos = sunPosition(future_year, future_month, future_day, future_hour, future_minute, lat=latitude, long=longitude)
-    el = pos[1]
-    az = pos[0]
+    pos_every_min = np.array([sunPosition(year,month,day,hr,mn) 
+        for hr,mn in zip(np.repeat(hrs,60),np.tile(mins,24))])
+
+    # get elevation
+    el = pos_every_min[:,1][pos_every_min[:,1]>0]
+    # get az
+    az = pos_every_min[:,0][pos_every_min[:,1]>0]
 
     R = R_opt(beta_ax,az_ax,el,az)
+
+    line_best_fit(R)
 
 # Run the rotational_angle function
 rotational_angle()
