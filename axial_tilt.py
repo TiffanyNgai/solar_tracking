@@ -96,25 +96,27 @@ def save_info(ser):
 def accelerometer(time_zone, latitude, longitude, opt_date, opt_tilt_angle):
     print("Now we're going to adjust the tilt angle. Move the hinge back to the horizontal position.")
 
-    time.sleep(1)
+    # time.sleep(1)
 
-    ports = serial.tools.list_ports.comports()
-    for i, port in enumerate(ports):
-        if 'usb' in port.device:
-            usb_port = port.device
+    # ports = serial.tools.list_ports.comports()
+    # for i, port in enumerate(ports):
+    #     if 'usb' in port.device:
+    #         usb_port = port.device
     
-    comm_rate = 115200
-    ser = serial.Serial(usb_port, comm_rate)
+    # comm_rate = 115200
+    # ser = serial.Serial(usb_port, comm_rate)
 
     start_time = time.time()
     MAX_RUNTIME = 3
 
-    getData=ser.readline()
-    horizontal_angle = float(getData.decode('utf-8')[:-2])
+    # getData=ser.readline()
+    # horizontal_angle = float(getData.decode('utf-8')[:-2])
 
-    while(True):
-        getData=ser.readline()
-        actual_tilt = (float(getData.decode('utf-8')[:-2]) - horizontal_angle + 180) % 360 - 180
+    actual_tilt_arr = np.arange(0, 91, 0.5)
+
+    for actual_tilt in actual_tilt_arr:
+        # getData=ser.readline()
+        # actual_tilt = (float(getData.decode('utf-8')[:-2]) - horizontal_angle + 180) % 360 - 180
 
         difference = opt_tilt_angle - actual_tilt
         MAX_ERROR = 0.5
@@ -123,13 +125,13 @@ def accelerometer(time_zone, latitude, longitude, opt_date, opt_tilt_angle):
             print("You're at the right angle, hold on...")
             time.sleep(2)
              
-            getData=ser.readline()
-            actual_tilt = (float(getData.decode('utf-8')[:-2]) - horizontal_angle + 180) % 360 - 180
+            # getData=ser.readline()
+            # actual_tilt = (float(getData.decode('utf-8')[:-2]) - horizontal_angle + 180) % 360 - 180
 
             difference = opt_tilt_angle - actual_tilt
             if abs(difference) < MAX_ERROR:
                 print(f"Congrats, the panel is at the right position {actual_tilt}.")
-                save_info(ser)
+                # save_info(ser)
                 break
         elif difference < 0:
             print(f"Move DOWN the panel. Actual angle: {actual_tilt}, target angle: {opt_tilt_angle}")
@@ -138,11 +140,14 @@ def accelerometer(time_zone, latitude, longitude, opt_date, opt_tilt_angle):
 
         if (time.time() - start_time) > MAX_RUNTIME:
             print("Program automatically shuts down because it's been running for too long.")
-            save_info(ser)
+            # save_info(ser)
             break
+
+        time.sleep(1)
 
 
 
 if __name__ == "__main__":
-    time_zone, latitude, longitude, opt_date, opt_tilt_angle = tilt_angle()
-    accelerometer(time_zone, latitude, longitude, opt_date, opt_tilt_angle)
+    # time_zone, latitude, longitude, opt_date, opt_tilt_angle = tilt_angle()
+    # accelerometer(time_zone, latitude, longitude, opt_date, opt_tilt_angle)
+    accelerometer(4, 43.5, -80.5, date.today(), 20)
