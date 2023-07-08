@@ -21,17 +21,17 @@ def line_best_fit(R):
     # Generate the curve using the fitted parameters
     fitted_curve = linear_function(x, fitted_m, fitted_b)
 
-    # Plot the original data and the fitted curve
-    plt.plot(x, R, 'ro', label='Original Data')
-    plt.plot(x, fitted_curve, 'b-', label='Fitted Curve')
-    plt.xlabel('Index')
-    plt.ylabel('R Values')
-    plt.legend()
-    plt.show()
+    # # Plot the original data and the fitted curve
+    # plt.plot(x, R, 'ro', label='Original Data')
+    # plt.plot(x, fitted_curve, 'b-', label='Fitted Curve')
+    # plt.xlabel('Index')
+    # plt.ylabel('R Values')
+    # plt.legend()
+    # plt.show()
 
-    # Print the equation of the fitted line
-    print("Equation of the fitted line:")
-    print("y =", fitted_m, "x +", fitted_b)
+    # # Print the equation of the fitted line
+    # print("Equation of the fitted line:")
+    # print("y =", fitted_m, "x +", fitted_b)
     return fitted_m, fitted_b
 
 
@@ -82,9 +82,6 @@ def optimal_rotational_angle(optimal_date, beta_ax, time_zone=4, latitude=43.5, 
     az = pos_every_min[:,0][pos_every_min[:,1]>0]
 
     R = R_opt(beta_ax,az_ax,el,az)
-
-    print(el.shape)
-    print(R.shape)
 
     fitted_m, fitted_b = line_best_fit(R)
 

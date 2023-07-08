@@ -64,6 +64,7 @@ def tilt_angle():
 
 
 def save_info(ser):
+    file_name = "power_captured.csv"
     daylight_start_min, fitted_m, fitted_b = optimal_rotational_angle(opt_date, opt_tilt_angle, time_zone, latitude, longitude)
 
     fitted_m = round(fitted_m, 3)
@@ -87,10 +88,13 @@ def save_info(ser):
     ser.write(str(fitted_b).encode('utf-8'))
     ser.write(b'\n')
 
-    while(1):
+    file = open(file_name, 'a')
+    while(1): # get power data from arduino
         getData=ser.readline()
-        data = getData.decode('utf-8')[:-2]
-        print(data)
+        power_string = getData.decode('utf-8')[:-2]
+        file.write(power_string) # current time, voltage, current, power
+        file.write('\n')
+        print(power_string)
 
 
 def accelerometer(time_zone, latitude, longitude, opt_date, opt_tilt_angle):
@@ -144,5 +148,12 @@ def accelerometer(time_zone, latitude, longitude, opt_date, opt_tilt_angle):
 
 
 if __name__ == "__main__":
-    time_zone, latitude, longitude, opt_date, opt_tilt_angle = tilt_angle()
+    # time_zone, latitude, longitude, opt_date, opt_tilt_angle = tilt_angle()
+    # accelerometer(time_zone, latitude, longitude, opt_date, opt_tilt_angle)
+
+    time_zone = 4
+    latitude = 43.5
+    longitude = -80.5
+    opt_date = date.today()
+    opt_tilt_angle = 20
     accelerometer(time_zone, latitude, longitude, opt_date, opt_tilt_angle)
