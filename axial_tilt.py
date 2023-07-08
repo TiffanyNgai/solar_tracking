@@ -1,15 +1,18 @@
-# 1. User would input the location, time zone, and intended time of use
-# 2. Program calculates the optimal axial tilt
-# 3. Program send signal taken from the accelerometer, and user adjust the 
-#    tilt angle accordingly
-
-from sun import sunPosition
-from rotational_angle import optimal_rotational_angle
+# axial tilt imports
+# from sun import sunPosition
+# from rotational_angle import optimal_rotational_angle
 import numpy as np
 import serial
 import serial.tools.list_ports
 import time
 from datetime import datetime, timedelta, date
+
+# sun position imports
+import math
+import numpy as np
+from matplotlib import pyplot as plt
+import matplotlib.cm as cm
+import pandas as pd
 
 def find_inc_ang(beta, panel_az, el, az):
     
@@ -26,15 +29,9 @@ def find_inc_ang(beta, panel_az, el, az):
     if deg > 90: deg = 90
     
     return deg
-
-def tilt_angle():
-    time_zone = int(input("Enter your timezone (4 for GMT -4): "))
-    latitude = float(input("Enter the latitude of the location: "))
-    longitude = float(input("Enter the longitude of the location: "))
-    start_date = input("Enter the start date which the device is being attached to the sign (mm/dd/yyyy): ")
-    duration = int(input("Enter the estimated number of day(s) the device is staying on the sign: "))
-
-    if len(start_date.split("/")) != 3:
+    
+def tilt_angle(time_zone, latitude, longitude, start_date, duration):
+    if len(start_date.split("/")) != 3: #TODO: might need to put this to the backend file
         print("Error: Invalid start date")
         return
     
@@ -60,7 +57,7 @@ def tilt_angle():
             opt_tilt_angle = beta
             current_inc_ang = inc_ang
 
-    return time_zone, latitude, longitude, opt_date, opt_tilt_angle
+    return opt_tilt_angle
 
 
 def save_info(ser):
@@ -93,8 +90,10 @@ def save_info(ser):
         print(data)
 
 
-def accelerometer(time_zone, latitude, longitude, opt_date, opt_tilt_angle):
-    print("Now we're going to adjust the tilt angle. Move the hinge back to the horizontal position.")
+def accelerometer():
+    #TODO: before running this function, we need to tell the user to put the hinge back to the horizontal position so we can get the angle for the horizontal and put it into horizontal_angle
+    #TODO: in the backend file, we need to set a max runtime for accelerometer
+    #TODO: we're at the right angle only if the abs(opt_tilt_angle - actual_angle) < MAX_ERROR ~0.5 for at least 4 times consecutively
 
     # time.sleep(1)
 
@@ -106,48 +105,110 @@ def accelerometer(time_zone, latitude, longitude, opt_date, opt_tilt_angle):
     # comm_rate = 115200
     # ser = serial.Serial(usb_port, comm_rate)
 
-    start_time = time.time()
-    MAX_RUNTIME = 3
-
     # getData=ser.readline()
     # horizontal_angle = float(getData.decode('utf-8')[:-2])
 
-    actual_tilt_arr = np.arange(0, 91, 0.5)
+    absolute_tilt_arr = np.arange(0, 91, 0.5)
 
-    for actual_tilt in actual_tilt_arr:
+    for absolute_tilt in absolute_tilt_arr:
         # getData=ser.readline()
         # actual_tilt = (float(getData.decode('utf-8')[:-2]) - horizontal_angle + 180) % 360 - 180
-
-        difference = opt_tilt_angle - actual_tilt
-        MAX_ERROR = 0.5
-
-        if abs(difference) < MAX_ERROR:
-            print("You're at the right angle, hold on...")
-            time.sleep(2)
-             
-            # getData=ser.readline()
-            # actual_tilt = (float(getData.decode('utf-8')[:-2]) - horizontal_angle + 180) % 360 - 180
-
-            difference = opt_tilt_angle - actual_tilt
-            if abs(difference) < MAX_ERROR:
-                print(f"Congrats, the panel is at the right position {actual_tilt}.")
-                # save_info(ser)
-                break
-        elif difference < 0:
-            print(f"Move DOWN the panel. Actual angle: {actual_tilt}, target angle: {opt_tilt_angle}")
-        elif difference > 0:
-            print(f"Move UP the panel. Actual angle: {actual_tilt}, target angle: {opt_tilt_angle}")
-
-        if (time.time() - start_time) > MAX_RUNTIME:
-            print("Program automatically shuts down because it's been running for too long.")
-            # save_info(ser)
-            break
+        yield absolute_tilt
 
         time.sleep(1)
 
 
+def call_accelerometer():
+    # before pressing start button
+    horizontal_angle = accelerometer()
+    # press start button
+    actual_tilt = accelerometer() - horizontal_angle
+    
+# sun position stuff
+def sunPosition(year, month, day, hour=12, m=0, s=0,lat=43.5, long=-80.5):
+    twopi = 2 * math.pi
+    deg2rad = math.pi / 180
 
-if __name__ == "__main__":
-    # time_zone, latitude, longitude, opt_date, opt_tilt_angle = tilt_angle()
-    # accelerometer(time_zone, latitude, longitude, opt_date, opt_tilt_angle)
-    accelerometer(4, 43.5, -80.5, date.today(), 20)
+    # Get day of the year, e.g. Feb 1 = 32, Mar 1 = 61 on leap years
+    len_month = [0,31,28,31,30,31,30,31,31,30,31,30]
+    day = day + np.cumsum(len_month)[month-1]
+    leapdays = (year % 4 == 0 and (year % 400 == 0 | year % 100 != 0) \
+                and day >= 60 and not (month==2 and day==60))
+    day += int(leapdays == True)
+
+    # Get Julian date - 2400000
+    hour = hour + m / 60 + s / 3600 # hour plus fraction
+    delta = year - 1949
+    leap = math.floor(delta / 4) # former leapyears
+    jd = 32916.5 + delta * 365 + leap + day + hour / 24
+
+    # The input to the Atronomer's almanach is the difference between
+    # the Julian date and JD 2451545.0 (noon, 1 January 2000)
+    time = jd - 51545.
+
+    # Ecliptic coordinates
+
+    # Mean longitude
+    mnlong = 280.460 + .9856474 * time
+    mnlong = mnlong % 360
+    mnlong += int(mnlong < 0)*360
+
+    # Mean anomaly
+    mnanom = 357.528 + .9856003 * time
+    mnanom = mnanom % 360
+    mnanom += int(mnanom < 0)*360
+    mnanom = mnanom * deg2rad
+
+    # Ecliptic longitude and obliquity of ecliptic
+    eclong = mnlong + 1.915 * math.sin(mnanom) + 0.020 * math.sin(2 * mnanom)
+    eclong = eclong % 360
+    eclong += int(eclong < 0)*360
+    oblqec = 23.439 - 0.0000004 * time
+    eclong = eclong * deg2rad
+    oblqec = oblqec * deg2rad
+
+    # Celestial coordinates
+    # Right ascension and declination
+    num = math.cos(oblqec) * math.sin(eclong)
+    den = math.cos(eclong)
+    ra = math.atan(num / den)
+    ra += int(den < 0)*math.pi
+    ra += int(den >= 0 and num < 0)*twopi
+    dec = math.asin(math.sin(oblqec) * math.sin(eclong))
+
+    # Local coordinates
+    # Greenwich mean sidereal time
+    gmst = 6.697375 + .0657098242 * time + hour
+    gmst = gmst % 24
+    gmst += int(gmst < 0)*24
+
+    # Local mean sidereal time
+    lmst = (gmst + long / 15.)
+    lmst = lmst % 24.
+    lmst += int(lmst < 0)*24.
+    lmst = lmst * 15. * deg2rad
+
+    # Hour angle
+    ha = lmst - ra
+    ha += int(ha < -math.pi)*twopi
+    ha -= int(ha > math.pi)*twopi
+
+    # Latitude to radians
+    lat = lat * deg2rad
+
+    # Azimuth and elevation
+    el = math.asin(math.sin(dec) * math.sin(lat) + math.cos(dec) * math.cos(lat) * math.cos(ha))
+    az = math.asin(-math.cos(dec) * math.sin(ha) / math.cos(el))
+
+    # For logic and names, see Spencer, J.W. 1989. Solar Energy. 42(4):353
+    cosAzPos = (0 <= math.sin(dec) - math.sin(el) * math.sin(lat))
+    sinAzNeg = (math.sin(az) < 0)
+    az += int(cosAzPos and sinAzNeg)*twopi
+    if (not cosAzPos):
+        az = math.pi - az 
+
+    el = el / deg2rad
+    az = az / deg2rad
+    lat = lat / deg2rad
+
+    return az, el
