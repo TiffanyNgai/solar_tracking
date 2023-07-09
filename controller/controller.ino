@@ -10,7 +10,7 @@ int time_zone;
 double latitude, longtitude, tilt_angle;
 
 // Motor
-const int motor_step_ratio = 2038;
+const double motor_step_ratio = 2048.0 / 360.0;
 const int motor_interrupt_pin = 8;  // Connect to interrupt pin
 volatile bool motorState = false;  // Motor state (ON/OFF)
 AccelStepper stepper(AccelStepper::FULL4WIRE, 2, 4, 3, 5);
@@ -54,7 +54,7 @@ void setup(){
 
   // Motor
   EEPROM.begin();
-  EEPROM.get(angle_address, current_angle);
+  current_angle = EEPROM.read(angle_address);
   double current_motor_pos = current_angle * motor_step_ratio;
   stepper.setMaxSpeed(1000);
   stepper.setAcceleration(500);
@@ -170,8 +170,8 @@ void loop(){
 //  }
 
   //testing motor
-  moving_interval_sec = 10;
-  if ((current_t_sec - previous_t_sec >= moving_interval_sec)) {
+  moving_interval_sec = 5;
+  if (current_t_sec - previous_t_sec >= moving_interval_sec) {
     double x = hour() * 60 + minute() - daylight_start_min;
     rotation_angle = fitted_m * x + fitted_b;
     if (rotation_angle > 90){ 
@@ -180,17 +180,20 @@ void loop(){
     else if (rotation_angle < -90) {
       rotation_angle = -90;
     }
+    rotation_angle = 90;
     motor_step = rotation_angle * motor_step_ratio;
-    Serial.print(motor_step);
-    Serial.println("");
+    current_angle = EEPROM.read(angle_address);
+    Serial.print("motor_step_ratio: "); Serial.println(motor_step_ratio);
+    Serial.print("current_angle: "); Serial.println(current_angle);
+    Serial.print("rotation_angle: "); Serial.println(rotation_angle);
+    Serial.print("motor_step: "); Serial.println(motor_step);
     stepper.moveTo(motor_step);
     while (stepper.distanceToGo() != 0) {
       stepper.run();
     }
     stepper.disableOutputs();
     current_angle = stepper.currentPosition() / motor_step_ratio;
-    EEPROM.put(angle_address, current_angle);
-    EEPROM.end();
+    EEPROM.write(angle_address, current_angle);
     previous_t_sec = current_t_sec;
   }
 
