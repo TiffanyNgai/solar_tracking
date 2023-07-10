@@ -12,8 +12,12 @@ double latitude, longtitude, tilt_angle;
 // Motor
 const double motor_step_ratio = 2048.0 / 360.0;
 AccelStepper stepper(AccelStepper::FULL4WIRE, 2, 4, 3, 5);
-const int angle_address = 0x01;
+const int angle_address = 0x0;
+const int angle_negative_address = 0x1;
+const int angle_frac_address = 0x2;
 double current_angle = 0.0;
+double current_angle_frac = 0.0;
+bool current_angle_negative = 0;
 unsigned long moving_interval_sec = 25.0 * 60.0;
 unsigned long current_t_sec, previous_t_sec;
 double rotation_angle = 0.0;
@@ -32,17 +36,9 @@ float current_mA = 0.0;
 float voltage = 0.0;
 float power_mW = 0.0;
 
-void move_motor()
+void move_motor(double x)
 {
-  time_t current_time = now();
-
-  int current_hour = hour(current_time);
-  int current_minute = minute(current_time);
-  int current_second = second(current_time);
-
-  previous_t_sec = current_hour * 3600.0 + current_minute * 60.0 + current_second;
-
-  double x = current_hour * 60.0 + current_minute - daylight_start_min;
+  
   rotation_angle = fitted_m * x + fitted_b;
   if (rotation_angle > 90.0)
   {
@@ -52,8 +48,32 @@ void move_motor()
   {
     rotation_angle = -90.0;
   }
+  rotation_angle = 0.0;
   motor_step = rotation_angle * motor_step_ratio;
   current_angle = EEPROM.read(angle_address);
+  current_angle_negative = EEPROM.read(angle_negative_address);
+  current_angle_frac = EEPROM.read(angle_frac_address);
+  current_angle_frac = current_angle_frac / 100.0;
+  current_angle += current_angle_frac;
+  if (current_angle_negative) {
+    current_angle = -current_angle;
+  }
+
+  // Testing
+  Serial.print("");
+  Serial.println("Before moving:");
+  Serial.print("current_position: ");
+  Serial.println(stepper.currentPosition() / motor_step_ratio);
+  Serial.print("current_angle: ");
+  Serial.println(current_angle);
+  Serial.print("current_angle_frac: ");
+  Serial.println(current_angle_frac);
+  Serial.print("current_angle_negative: ");
+  Serial.println(current_angle_negative);
+  Serial.print("rotation_angle: ");
+  Serial.println(rotation_angle);
+
+  
   stepper.moveTo(motor_step);
   while (stepper.distanceToGo() != 0)
   {
@@ -61,15 +81,31 @@ void move_motor()
   }
   stepper.disableOutputs();
   current_angle = stepper.currentPosition() / motor_step_ratio;
-  EEPROM.write(angle_address, current_angle);
+  if (current_angle < 0) {
+    current_angle = -current_angle;
+    current_angle_frac = (current_angle - int(current_angle)) * 100;
+    EEPROM.write(angle_address, current_angle);
+    EEPROM.write(angle_negative_address, 1);
+    EEPROM.write(angle_frac_address, current_angle_frac);
+  }
+  else {
+    current_angle_frac = (current_angle - int(current_angle)) * 100;
+    EEPROM.write(angle_address, current_angle);
+    EEPROM.write(angle_negative_address, 0);
+    EEPROM.write(angle_frac_address, current_angle_frac);
+  }
 
   // Testing
   Serial.print("");
-  Serial.println("After moving");
+  Serial.println("After moving:");
   Serial.print("current_position: ");
-  Serial.println(stepper.currentPosition());
+  Serial.println(stepper.currentPosition() / motor_step_ratio);
   Serial.print("current_angle: ");
   Serial.println(current_angle);
+  Serial.print("current_angle_frac: ");
+  Serial.println(current_angle_frac);
+  Serial.print("current_angle_negative: ");
+  Serial.println(current_angle_negative);
   Serial.print("rotation_angle: ");
   Serial.println(rotation_angle);
 }
@@ -93,6 +129,13 @@ void setup()
 
   // Motor
   current_angle = EEPROM.read(angle_address);
+  current_angle_negative = EEPROM.read(angle_negative_address);
+  current_angle_frac = EEPROM.read(angle_frac_address);
+  current_angle_frac = current_angle_frac / 100.0;
+  current_angle += current_angle_frac;
+  if (current_angle_negative) {
+    current_angle = -current_angle;
+  }
   double current_motor_pos = current_angle * motor_step_ratio;
   stepper.setMaxSpeed(1000);
   stepper.setAcceleration(500);
@@ -144,14 +187,21 @@ void setup()
       setTime(start_hour, start_minute, start_second, start_day, start_month, start_year);
     }
   }
-  delay(100);
-  move_motor();
+  time_t current_time = now();
+
+  int current_hour = hour(current_time);
+  int current_minute = minute(current_time);
+  int current_second = second(current_time);
+
+  previous_t_sec = current_hour * 3600.0 + current_minute * 60.0 + current_second;
+  
+  double x = current_hour * 60.0 + current_minute - daylight_start_min;
+  move_motor(x);
 }
 
 void loop()
 {
   // testing
-  delay(1000000);
   unsigned long moving_interval_sec = 5;
 
   time_t current_time = now();
@@ -165,7 +215,8 @@ void loop()
   // 6am to 8pm - comment the following for fixed axis
   if ((current_hour >= 6 && current_hour < 20) && (current_t_sec - previous_t_sec >= moving_interval_sec))
   {
-    move_motor();
+    double x = current_hour * 60.0 + current_minute - daylight_start_min;
+    move_motor(x);
     previous_t_sec = current_t_sec;
   }
 
