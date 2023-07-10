@@ -1,4 +1,4 @@
-#include<Wire.h>
+#include <Wire.h>
 #include <TimeLib.h>
 #include <AccelStepper.h>
 #include <EEPROM.h>
@@ -21,7 +21,6 @@ double motor_step = 0.0;
 double fitted_m, fitted_b;
 int daylight_start_min;
 
-
 // LED
 const int LED_pin = 13;
 
@@ -33,17 +32,8 @@ float current_mA = 0.0;
 float voltage = 0.0;
 float power_mW = 0.0;
 
-<<<<<<< Updated upstream
-void move_motor(double x){
-=======
-void move_motor(){
-  //Testing
-  Serial.print(""); Serial.println("Before moving");
-  Serial.print("current_position: "); Serial.println(stepper.currentPosition());
-  Serial.print("current_angle: "); Serial.println(current_angle);
-  Serial.print("rotation_angle: "); Serial.println(rotation_angle);
-  
->>>>>>> Stashed changes
+void move_motor()
+{
   time_t current_time = now();
 
   int current_hour = hour(current_time);
@@ -51,38 +41,46 @@ void move_motor(){
   int current_second = second(current_time);
 
   previous_t_sec = current_hour * 3600.0 + current_minute * 60.0 + current_second;
-  
+
   double x = current_hour * 60.0 + current_minute - daylight_start_min;
   rotation_angle = fitted_m * x + fitted_b;
-  if (rotation_angle > 90.0){ 
+  if (rotation_angle > 90.0)
+  {
     rotation_angle = 90.0;
   }
-  else if (rotation_angle < -90.0) {
+  else if (rotation_angle < -90.0)
+  {
     rotation_angle = -90.0;
   }
   motor_step = rotation_angle * motor_step_ratio;
   current_angle = EEPROM.read(angle_address);
   stepper.moveTo(motor_step);
-  while (stepper.distanceToGo() != 0) {
+  while (stepper.distanceToGo() != 0)
+  {
     stepper.run();
   }
   stepper.disableOutputs();
   current_angle = stepper.currentPosition() / motor_step_ratio;
   EEPROM.write(angle_address, current_angle);
 
-  //Testing
-  Serial.print(""); Serial.println("After moving");
-  Serial.print("current_position: "); Serial.println(stepper.currentPosition());
-  Serial.print("current_angle: "); Serial.println(current_angle);
-  Serial.print("rotation_angle: "); Serial.println(rotation_angle);
+  // Testing
+  Serial.print("");
+  Serial.println("After moving");
+  Serial.print("current_position: ");
+  Serial.println(stepper.currentPosition());
+  Serial.print("current_angle: ");
+  Serial.println(current_angle);
+  Serial.print("rotation_angle: ");
+  Serial.println(rotation_angle);
 }
- 
-void setup(){
+
+void setup()
+{
   Serial.begin(115200);
-  
+
   // Accelerometer
-  const int MPU_addr=0x68;
-  int16_t AcX,AcY,AcZ;
+  const int MPU_addr = 0x68;
+  int16_t AcX, AcY, AcZ;
   int minVal = 265;
   int maxVal = 402;
   double y;
@@ -107,23 +105,25 @@ void setup(){
 
   // LED
   pinMode(LED_pin, OUTPUT);
-  
-  while(send_angle){
+
+  while (send_angle)
+  {
     Wire.beginTransmission(MPU_addr);
     Wire.write(0x3B);
     Wire.endTransmission(false);
-    Wire.requestFrom(MPU_addr,14,true);
-    AcX=Wire.read()<<8|Wire.read();
-    AcY=Wire.read()<<8|Wire.read();
-    AcZ=Wire.read()<<8|Wire.read();
-    int xAng = map(AcX,minVal,maxVal,-90,90);
-    int zAng = map(AcZ,minVal,maxVal,-90,90);
-     
-    y= RAD_TO_DEG * (atan2(-xAng, -zAng)+PI);
+    Wire.requestFrom(MPU_addr, 14, true);
+    AcX = Wire.read() << 8 | Wire.read();
+    AcY = Wire.read() << 8 | Wire.read();
+    AcZ = Wire.read() << 8 | Wire.read();
+    int xAng = map(AcX, minVal, maxVal, -90, 90);
+    int zAng = map(AcZ, minVal, maxVal, -90, 90);
+
+    y = RAD_TO_DEG * (atan2(-xAng, -zAng) + PI);
     Serial.println(y);
     delay(400);
-    
-    if (Serial.available()) {
+
+    if (Serial.available())
+    {
       send_angle = 0;
       String start_time = Serial.readStringUntil('\n');
       time_zone = atoi(Serial.readStringUntil('\n').c_str());
@@ -142,57 +142,65 @@ void setup(){
       start_second = start_time.substring(17, 19).toInt();
 
       setTime(start_hour, start_minute, start_second, start_day, start_month, start_year);
-    }  
+    }
   }
   delay(100);
   move_motor();
 }
 
-void loop(){
-  //testing
+void loop()
+{
+  // testing
   delay(1000000);
   unsigned long moving_interval_sec = 5;
-  
+
   time_t current_time = now();
 
   int current_hour = hour(current_time);
   int current_minute = minute(current_time);
   int current_second = second(current_time);
-  
+
   current_t_sec = current_hour * 3600 + current_minute * 60 + current_second;
 
   // 6am to 8pm - comment the following for fixed axis
-  if ((current_hour >= 6 && current_hour < 20) && (current_t_sec - previous_t_sec >= moving_interval_sec)) {    
+  if ((current_hour >= 6 && current_hour < 20) && (current_t_sec - previous_t_sec >= moving_interval_sec))
+  {
     move_motor();
     previous_t_sec = current_t_sec;
   }
 
   // 8pm to 6am
-  if (current_hour >= 20 || current_hour < 6) {
+  if (current_hour >= 20 || current_hour < 6)
+  {
     digitalWrite(LED_pin, HIGH);
   }
-  else{
+  else
+  {
     digitalWrite(LED_pin, LOW);
   }
-
 
   // Measure power
   bool base_state = LOW;
   digitalWrite(base_pin, base_state);
   delay(del);
   voltage = ina219.getBusVoltage_V();
-  
+
   base_state = HIGH;
   digitalWrite(base_pin, base_state);
   delay(del);
   current_mA = ina219.getCurrent_mA();
-  
-  power_mW = (0.7*voltage)*current_mA;
-  
-  Serial.print(current_hour); Serial.print(":"); 
-  Serial.print(current_minute); Serial.print(":"); 
-  Serial.print(current_second); Serial.print(", "); 
-  Serial.print(voltage); Serial.print(", "); 
-  Serial.print(current_mA); Serial.print(", ");
+
+  power_mW = (0.7 * voltage) * current_mA;
+
+  Serial.print(current_hour);
+  Serial.print(":");
+  Serial.print(current_minute);
+  Serial.print(":");
+  Serial.print(current_second);
+  Serial.print(", ");
+  Serial.print(voltage);
+  Serial.print(", ");
+  Serial.print(current_mA);
+  Serial.print(", ");
   Serial.println(power_mW);
 }
