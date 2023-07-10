@@ -12,7 +12,7 @@ double latitude, longtitude, tilt_angle;
 // Motor
 const double motor_step_ratio = 2048.0 / 360.0;
 AccelStepper stepper(AccelStepper::FULL4WIRE, 2, 4, 3, 5);
-const int angle_address = 0;
+const int angle_address = 0x01;
 double current_angle = 0.0;
 unsigned long moving_interval_sec = 25.0 * 60.0;
 unsigned long current_t_sec, previous_t_sec;
@@ -33,7 +33,17 @@ float current_mA = 0.0;
 float voltage = 0.0;
 float power_mW = 0.0;
 
+<<<<<<< Updated upstream
 void move_motor(double x){
+=======
+void move_motor(){
+  //Testing
+  Serial.print(""); Serial.println("Before moving");
+  Serial.print("current_position: "); Serial.println(stepper.currentPosition());
+  Serial.print("current_angle: "); Serial.println(current_angle);
+  Serial.print("rotation_angle: "); Serial.println(rotation_angle);
+  
+>>>>>>> Stashed changes
   time_t current_time = now();
 
   int current_hour = hour(current_time);
@@ -59,6 +69,12 @@ void move_motor(double x){
   stepper.disableOutputs();
   current_angle = stepper.currentPosition() / motor_step_ratio;
   EEPROM.write(angle_address, current_angle);
+
+  //Testing
+  Serial.print(""); Serial.println("After moving");
+  Serial.print("current_position: "); Serial.println(stepper.currentPosition());
+  Serial.print("current_angle: "); Serial.println(current_angle);
+  Serial.print("rotation_angle: "); Serial.println(rotation_angle);
 }
  
 void setup(){
@@ -78,7 +94,6 @@ void setup(){
   Wire.endTransmission(true);
 
   // Motor
-  EEPROM.begin();
   current_angle = EEPROM.read(angle_address);
   double current_motor_pos = current_angle * motor_step_ratio;
   stepper.setMaxSpeed(1000);
@@ -129,10 +144,15 @@ void setup(){
       setTime(start_hour, start_minute, start_second, start_day, start_month, start_year);
     }  
   }
+  delay(100);
   move_motor();
 }
 
 void loop(){
+  //testing
+  delay(1000000);
+  unsigned long moving_interval_sec = 5;
+  
   time_t current_time = now();
 
   int current_hour = hour(current_time);

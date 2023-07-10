@@ -32509,3 +32509,284 @@ motor_step_ratio: 5.69
 current_angle: 90.00
 rotation_angle: 90.00
 motor_step: 512.00
+10:38:13, 0.89, -0.10, -0.06
+10:38:16, 0.89, -0.10, -0.06
+10:38:16, 0.89, -0.10, -0.06
+10:38:17, 0.89, -0.10, -0.06
+10:38:18, 0.89, -0.10, -0.06
+10:38:19, 0.89, -0.10, -0.06
+10:38:20, 0.90, -0.10, -0.06
+10:38:20, 0.89, -0.10, -0.06
+10:38:21, 0.89, -0.10, -0.06
+10:38:22, 0.90, -0.10, -0.06
+10:38:23, 0.89, -0.20, -0.12
+10:38:24, 0.89, -0.10, -0.06
+10:38:24, 0.89, -0.10, -0.06
+10:38:25, 0.89, -0.10, -0.06
+10:38:26, 0.93, -0.10, -0.06
+10:38:27, 2.70, -0.10, -0.19
+10:38:28, 2.66, 0.00, 0.00
+10:38:28, 3.14, 0.00, 0.00
+10:38:29, 3.14, 0.00, 0.00
+10:38:30, 3.13, 0.00, 0.00
+10:38:31, 3.12, 0.00, 0.00
+10:38:32, 3.11, 0.00, 0.00
+10:38:33, 3.10, 0.00, 0.00
+10:38:33, 3.09, 0.00, 0.00
+10:38:34, 3.08, 0.00, 0.00
+10:38:35, 3.08, 0.00, 0.00
+10:38:36, 3.09, 0.00, 0.00
+10:38:37, 3.10, 0.00, 0.00
+10:38:37, 3.11, 0.00, 0.00
+10:38:38, 3.12, 0.00, 0.00
+10:38:39, 3.13, 0.10, 0.22
+10:38:40, 3.13, 0.00, 0.00
+10:38:41, 3.13, 0.00, 0.00
+10:38:41, 3.12, 0.00, 0.00
+10:38:42, 3.11, 0.00, 0.00
+10:38:43, 3.10, 0.00, 0.00
+10:38:44, 3.10, 0.00, 0.00
+10:38:45, 3.10, 0.00, 0.00
+10:38:45, 3.08, 0.00, 0.00
+10:38:46, 3.08, 0.00, 0.00
+10:38:47, 3.08, 0.10, 0.22
+Before moving
+current_angle: 220.00
+rotation_angle: 0.00
+After moving
+current_angle: -36.74
+rotation_angle: -36.86
+10:41:25, 3.05, -0.10, -0.21
+10:41:29, 3.08, 0.10, 0.22
+10:41:29, 3.09, 0.00, 0.00
+10:41:30, 3.09, 0.00, 0.00
+10:41:31, 3.09, 0.10, 0.22
+10:41:32, 3.08, 0.00, 0.00
+10:41:33, 3.07, 0.10, 0.22
+10:41:33, 3.06, 0.10, 0.21
+10:41:34, 3.06, 0.10, 0.21
+10:41:35, 3.06, 0.00, 0.00
+10:41:36, 3.06, 0.10, 0.21
+10:41:37, 3.07, 0.00, 0.00
+10:41:37, 3.08, 0.00, 0.00
+10:41:38, 3.09, 0.00, 0.00
+10:41:39, 3.10, 0.00, 0.00
+10:41:40, 3.10, 0.00, 0.00
+10:41:41, 3.10, 0.00, 0.00
+10:41:41, 3.09, 0.00, 0.00
+10:41:42, 3.08, 0.00, 0.00
+Before moving
+current_angle: 220.00
+rotation_angle: 0.00
+After moving
+current_angle: -36.56
+rotation_angle: -36.63
+10:42:24, 3.04, 0.00, 0.00
+10:42:28, 3.07, 0.10, 0.21
+10:42:28, 3.09, 0.00, 0.00
+Before moving
+current_angle: -36.56
+rotation_angle: -36.63
+After moving
+current_angle: -36.56
+rotation_angle: -36.63
+10:42:29, 3.04, 0.00, 0.00
+10:42:30, 3.05, 0.10, 0.21
+10:42:31, 3.06, 0.00, 0.00
+10:42:32, 3.07, 0.00, 0.00
+10:42:32, 3.08, 0.00, 0.00
+10:42:33, 3.10, 0.00, 0.00
+Before moving
+current_angle: -36.56
+rotation_angle: -36.63
+After moving
+current_angle: -36.56
+rotation_angle: -36.63
+10:42:34, 3.07, 0.10, 0.21
+10:42:35, 3.06, 0.00, 0.00
+10:42:36, 3.06, 0.10, 0.21
+10:42:36, 3.06, 0.00, 0.00
+10:42:37, 3.07, 0.00, 0.00
+10:42:38, 3.08, 0.10, 0.22
+Before moving
+current_angle: -36.56
+rotation_angle: -36.63
+After moving
+current_angle: -36.56
+rotation_angle: -36.63
+10:42:39, 3.08, 0.00, 0.00
+10:42:40, 3.08, 0.00, 0.00
+10:42:41, 3.06, 0.00, 0.00
+10:42:41, 3.06, 0.00, 0.00
+10:42:42, 3.06, 0.00, 0.00
+10:42:43, 3.07, 0.10, 0.22
+Before moving
+current_angle: -36.56
+rotation_angle: -36.63
+After moving
+current_angle: -36.56
+rotation_angle: -36.63
+10:42:44, 3.10, 0.00, 0.00
+10:42:45, 3.09, 0.00, 0.00
+10:42:45, 3.07, 0.00, 0.00
+10:42:46, 3.06, 0.00, 0.00
+10:42:47, 3.06, 0.00, 0.00
+10:42:48, 3.07, 0.00, 0.00
+Before moving
+current_angle: -36.56
+rotation_angle: -36.63
+After moving
+current_angle: -36.56
+rotation_angle: -36.63
+10:42:49, 3.10, 0.00, 0.00
+10:42:49, 3.10, 0.00, 0.00
+10:42:50, 3.09, 0.00, 0.00
+10:42:51, 3.08, 0.00, 0.00
+10:42:52, 3.07, 0.00, 0.00
+10:42:53, 3.06, 0.00, 0.00
+10:42:53, 3.06, 0.10, 0.21
+Before moving
+current_angle: -36.56
+rotation_angle: -36.63
+After moving
+current_angle: -36.56
+rotation_angle: -36.63
+10:42:54, 3.10, 0.00, 0.00
+10:42:55, 3.11, 0.00, 0.00
+10:42:56, 3.10, 0.00, 0.00
+10:42:57, 3.10, 0.00, 0.00
+10:42:57, 3.08, 0.00, 0.00
+10:42:58, 3.07, 0.00, 0.00
+Before moving
+current_angle: -36.56
+rotation_angle: -36.63
+After moving
+current_angle: -36.56
+rotation_angle: -36.63
+10:42:59, 3.07, 0.00, 0.00
+Before moving
+current_angle: 220.00
+rotation_angle: 0.00
+After moving
+current_angle: -36.39
+rotation_angle: -36.41
+10:43:9, 3.03, 0.10, 0.21
+10:43:13, 3.04, 0.00, 0.00
+10:43:13, 3.04, 0.10, 0.21
+Before moving
+current_angle: -36.39
+rotation_angle: -36.41
+After moving
+current_angle: -36.39
+rotation_angle: -36.41
+10:43:14, 3.10, 0.00, 0.00
+10:43:15, 3.10, 0.00, 0.00
+10:43:16, 3.10, 0.00, 0.00
+10:43:17, 3.09, 0.00, 0.00
+10:43:17, 3.07, 0.00, 0.00
+Before moving
+current_angle: 221.00
+rotation_angle: 0.00
+After moving
+current_angle: -35.68
+rotation_angle: -35.75
+10:46:27, 3.03, 0.00, 0.00
+10:46:28, 3.04, 0.00, 0.00
+10:46:28, 3.04, 0.10, 0.21
+Before moving
+current_angle: -35.68
+rotation_angle: -35.75
+After moving
+current_angle: -35.68
+rotation_angle: -35.75
+10:46:29, 3.08, 0.00, 0.00
+10:46:30, 3.09, 0.00, 0.00
+10:46:31, 3.09, 0.10, 0.22
+10:46:32, 3.09, 0.00, 0.00
+10:46:32, 3.08, 0.10, 0.22
+10:46:33, 3.08, 0.00, 0.00
+Before moving
+current_angle: -35.68
+rotation_angle: -35.75
+After moving
+current_angle: -35.68
+rotation_angle: -35.75
+10:46:34, 3.06, 0.10, 0.21
+Before moving
+current_angle: 221.00
+rotation_angle: 0.00
+After moving
+current_angle: -34.98
+rotation_angle: -35.09
+Before moving
+current_position: 1262
+current_angle: 222.00
+rotation_angle: 0.00
+After moving
+current_position: -197
+current_angle: -34.63
+rotation_angle: -34.65
+Before moving
+current_position: 1262
+current_angle: 222.00
+rotation_angle: 0.00
+After moving
+current_position: -194
+current_angle: -34.10
+rotation_angle: -34.20
+Before moving
+current_position: 1262
+current_angle: 222.00
+rotation_angle: 0.00
+After moving
+current_position: -193
+current_angle: -33.93
+rotation_angle: -33.98
+Before moving
+current_position: 1268
+current_angle: 223.00
+rotation_angle: 0.00
+After moving
+current_position: -193
+current_angle: -33.93
+rotation_angle: -33.98
+Before moving
+current_position: 1268
+current_angle: 223.00
+rotation_angle: 0.00
+After moving
+current_position: -190
+current_angle: -33.40
+rotation_angle: -33.54
+Before moving
+current_position: 1268
+current_angle: 223.00
+rotation_angle: 0.00
+After moving
+current_position: -188
+current_angle: -33.05
+rotation_angle: -33.10
+Before moving
+current_position: 1268
+current_angle: 223.00
+rotation_angle: 0.00
+After moving
+current_position: -188
+current_angle: -33.05
+rotation_angle: -33.10
+Before moving
+current_position: 0
+current_angle: 0.00
+rotation_angle: 0.00
+After moving
+current_position: -185
+current_angle: -32.52
+rotation_angle: -32.66
+Before moving
+current_position: 1274
+current_angle: 224.00
+rotation_angle: 0.00
+After moving
+current_position: -185
+current_angle: -32.52
+rotation_angle: -32.66
