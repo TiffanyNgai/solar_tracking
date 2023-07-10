@@ -14,7 +14,7 @@ const double motor_step_ratio = 2048.0 / 360.0;
 AccelStepper stepper(AccelStepper::FULL4WIRE, 2, 4, 3, 5);
 const int angle_address = 0;
 double current_angle = 0.0;
-unsigned long moving_interval_sec = 25 * 60;
+unsigned long moving_interval_sec = 25.0 * 60.0;
 unsigned long current_t_sec, previous_t_sec;
 double rotation_angle = 0.0;
 double motor_step = 0.0;
@@ -29,26 +29,26 @@ const int LED_pin = 13;
 Adafruit_INA219 ina219;
 const int base_pin = 7;
 int del = 400;
-float current_mA = 0;
-float voltage = 0;
-float power_mW = 0;
+float current_mA = 0.0;
+float voltage = 0.0;
+float power_mW = 0.0;
 
-void move_motor(){
+void move_motor(double x){
   time_t current_time = now();
 
   int current_hour = hour(current_time);
   int current_minute = minute(current_time);
   int current_second = second(current_time);
 
-  previous_t_sec = current_hour * 3600 + current_minute * 60 + current_second;
+  previous_t_sec = current_hour * 3600.0 + current_minute * 60.0 + current_second;
   
-  double x = current_hour * 60 + current_minute - daylight_start_min;
+  double x = current_hour * 60.0 + current_minute - daylight_start_min;
   rotation_angle = fitted_m * x + fitted_b;
-  if (rotation_angle > 90){ 
-    rotation_angle = 90;
+  if (rotation_angle > 90.0){ 
+    rotation_angle = 90.0;
   }
-  else if (rotation_angle < -90) {
-    rotation_angle = -90;
+  else if (rotation_angle < -90.0) {
+    rotation_angle = -90.0;
   }
   motor_step = rotation_angle * motor_step_ratio;
   current_angle = EEPROM.read(angle_address);
@@ -89,7 +89,9 @@ void setup(){
   ina219.begin();
   pinMode(base_pin, OUTPUT);
   ina219.setCalibration_16V_400mA();
-  
+
+  // LED
+  pinMode(LED_pin, OUTPUT);
   
   while(send_angle){
     Wire.beginTransmission(MPU_addr);
