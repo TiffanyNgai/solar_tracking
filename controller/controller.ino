@@ -48,7 +48,6 @@ void move_motor(double x)
   {
     rotation_angle = -90.0;
   }
-  rotation_angle = 0.0;
   motor_step = rotation_angle * motor_step_ratio;
   current_angle = EEPROM.read(angle_address);
   current_angle_negative = EEPROM.read(angle_negative_address);
@@ -58,21 +57,6 @@ void move_motor(double x)
   if (current_angle_negative) {
     current_angle = -current_angle;
   }
-
-  // Testing
-  Serial.print("");
-  Serial.println("Before moving:");
-  Serial.print("current_position: ");
-  Serial.println(stepper.currentPosition() / motor_step_ratio);
-  Serial.print("current_angle: ");
-  Serial.println(current_angle);
-  Serial.print("current_angle_frac: ");
-  Serial.println(current_angle_frac);
-  Serial.print("current_angle_negative: ");
-  Serial.println(current_angle_negative);
-  Serial.print("rotation_angle: ");
-  Serial.println(rotation_angle);
-
   
   stepper.moveTo(motor_step);
   while (stepper.distanceToGo() != 0)
@@ -94,20 +78,6 @@ void move_motor(double x)
     EEPROM.write(angle_negative_address, 0);
     EEPROM.write(angle_frac_address, current_angle_frac);
   }
-
-  // Testing
-  Serial.print("");
-  Serial.println("After moving:");
-  Serial.print("current_position: ");
-  Serial.println(stepper.currentPosition() / motor_step_ratio);
-  Serial.print("current_angle: ");
-  Serial.println(current_angle);
-  Serial.print("current_angle_frac: ");
-  Serial.println(current_angle_frac);
-  Serial.print("current_angle_negative: ");
-  Serial.println(current_angle_negative);
-  Serial.print("rotation_angle: ");
-  Serial.println(rotation_angle);
 }
 
 void setup()
@@ -201,9 +171,6 @@ void setup()
 
 void loop()
 {
-  // testing
-  unsigned long moving_interval_sec = 5;
-
   time_t current_time = now();
 
   int current_hour = hour(current_time);
