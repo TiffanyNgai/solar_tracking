@@ -48,6 +48,8 @@ void move_motor(double x)
   {
     rotation_angle = -90.0;
   }
+  rotation_angle = 0;
+  rotation_angle = -rotation_angle;
   motor_step = rotation_angle * motor_step_ratio;
   current_angle = EEPROM.read(angle_address);
   current_angle_negative = EEPROM.read(angle_negative_address);
@@ -157,16 +159,6 @@ void setup()
       setTime(start_hour, start_minute, start_second, start_day, start_month, start_year);
     }
   }
-  time_t current_time = now();
-
-  int current_hour = hour(current_time);
-  int current_minute = minute(current_time);
-  int current_second = second(current_time);
-
-  previous_t_sec = current_hour * 3600.0 + current_minute * 60.0 + current_second;
-  
-  double x = current_hour * 60.0 + current_minute - daylight_start_min;
-  move_motor(x);
 }
 
 void loop()
